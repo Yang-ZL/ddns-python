@@ -133,21 +133,21 @@ class DDNS(object):
 
 class Log(object):
     def __init__(self):
-        pass
+        self.rootPath = os.path.dirname(os.path.abspath(__file__))
 
     def info(self, msg):
         self.checkDir()
-        filePath = os.curdir + '/logs/info.log'
+        filePath = self.rootPath + '/logs/info.log'
         self.writeMsg(filePath, msg)
 
     def error(self, msg):
         self.checkDir()
-        filePath = os.curdir + '/logs/error.log'
+        filePath = self.rootPath + '/logs/error.log'
         self.writeMsg(filePath, msg)
 
     def checkDir(self):
 
-        if not os.path.exists(os.curdir + '/logs'):
+        if not os.path.exists(self.rootPath + '/logs'):
             os.mkdir(os.curdir + '/logs')
 
         return 1
