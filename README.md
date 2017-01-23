@@ -1,7 +1,6 @@
 # What is DDNS-PYTHON
 
 
-DDNS-python 使用 requests 模块，请确保运行脚本的机器上的 requests 模块且版本做新。
 
 **NOTICE** 
 * Python = 2.7

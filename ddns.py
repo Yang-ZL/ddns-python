@@ -4,15 +4,16 @@ import time
 import sys
 import os
 import json
-import requests
+import urllib
+import urllib2
 
 class DDNS(object):
 
     def __init__(self):
         """Class initialization
-        
+
         Eg. abc.google.com
-        
+
         Args:
             _domain: google.com
             _subdomain: abc
@@ -43,7 +44,9 @@ class DDNS(object):
         for domain in request['content']['domains']:
             if domain['name'] == self._domain:
                 return domain['id']
-
+         
+        raise APIError("Cant't fetch the info about the domain (%s)." % self._domain)
+            
     def getRecordID(self, domainID):
 
         payload = {
@@ -62,20 +65,24 @@ class DDNS(object):
         if int(request['content']['status']['code']) != 1:
             raise APIError(request['content']['status']['message'])
 
-        for record in request['content']["records"]:
-            if record["name"] == self._subdomain:
-                response["id"] = record["id"]
-                response["value"] = record["value"]
+        for record in request['content']['records']:
+
+            if record['name'] == self._subdomain:
+                response['id'] = record['id']
+                response['value'] = record['value']
+                response['recordLineID'] = record['line_id']
                 return response
 
-    def updateIP(self, domainID, recordID, hostIP):
+        raise APIError("Can't fetch the DNS record about the subdomain(%s)." % self._subdomain)
+
+    def updateIP(self, domainID, recordID, recordLineID, hostIP):
         payload = {
             'login_token': self._token,
             'format': self._format,
             'domain_id': domainID,
             'record_id': recordID,
             'sub_domain': self._subdomain,
-            'record_line': u'\u9ed8\u8ba4',
+            'record_line_id': recordLineID,
             'value': hostIP
         }
         url = 'https://dnsapi.cn/Record.Ddns'
@@ -110,46 +117,49 @@ class DDNS(object):
 
     def POST(self, url, payload):
         response = {}
+
         try:
-            request = requests.post(url, payload, timeout=3)
-        except Exception:
+            request = urllib2.Request(url=url, data=urllib.urlencode(payload))
+            request_data = urllib2.urlopen(request, timeout=3)
+        except Exception as err:
+            raise PostError("post : %s" % err)
             response['status'] = 0
-            response['content'] = "Error: connect/post timeout. Please check the domain which must correct."
+            response['content'] = "Error: connect/post timeout. Please check the url (%s) which must correct." % err
         else:
             response['status'] = 1
-            response['content'] = json.loads(request.text)
+            response['content'] = json.loads(request_data.read())
 
         return response
 
 class Log(object):
     def __init__(self):
         pass
-    
+
     def info(self, msg):
         self.checkDir()
         filePath = os.curdir + '/logs/info.log'
         self.writeMsg(filePath, msg)
-    
+
     def error(self, msg):
         self.checkDir()
         filePath = os.curdir + '/logs/error.log'
         self.writeMsg(filePath, msg)
-            
+
     def checkDir(self):
-        
+
         if not os.path.exists(os.curdir + '/logs'):
-            os.mkdir(os.curdir + '/logs') 
-            
-        return 1  
-    
-    def writeMsg(self, Specfile, msg):   
+            os.mkdir(os.curdir + '/logs')
+
+        return 1
+
+    def writeMsg(self, Specfile, msg):
         try:
             fo = open(Specfile, 'a')
             fo.write(msg + '\n')
             fo.close()
         except Exception:
             pass
-        
+
 class Error(Exception):
     """Base class for exception in this module."""
     pass
@@ -171,20 +181,20 @@ if __name__ == '__main__':
     try:
         dynamic = DDNS()
         logs = Log()
- 
+
         localTime = time.strftime("%a %b %d %H:%M:%S %Y", time.localtime())
         domainid = dynamic.getDomainID()
         record = dynamic.getRecordID(domainid)
         hostIP = dynamic.getIP()
- 
+
         if int(dynamic.checkIP(record['value'], hostIP)) != 1:
             logs.info("[%s] No need to update record IP." % (localTime))
             sys.exit(0)
- 
-        dynamic.updateIP(domainid, record['id'], hostIP)
- 
+
+        dynamic.updateIP(domainid, record['id'], record['recordLineID'], hostIP)
+
         logs.info("[%s] The recored IP have updated to be : %s" % (localTime, hostIP))
-        
+
     except PostError as err:
         logs.error("[%s] ERROR: %s" % (localTime, err))
 
