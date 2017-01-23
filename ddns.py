@@ -148,7 +148,7 @@ class Log(object):
     def checkDir(self):
 
         if not os.path.exists(self.rootPath + '/logs'):
-            os.mkdir(os.curdir + '/logs')
+            os.mkdir(self.rootPath + '/logs')
 
         return 1
 
