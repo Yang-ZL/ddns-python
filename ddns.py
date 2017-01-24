@@ -33,15 +33,12 @@ class DDNS(object):
         }
         url = 'https://dnsapi.cn/Domain.List'
 
-        request = self.POST(url, payload)
+        response = self.POST(url, payload)
 
-        if request['status'] != 1:
-            raise PostError(request['content'])
+        if int(response['status']['code']) != 1:
+            raise APIError("Code: 1 " + response['status']['message'])
 
-        if int(request['content']['status']['code']) != 1:
-            raise APIError(request['content']['status']['message'])
-
-        for domain in request['content']['domains']:
+        for domain in response['domains']:
             if domain['name'] == self._domain:
                 return domain['id']
          
@@ -56,22 +53,19 @@ class DDNS(object):
         }
         url = 'https://dnsapi.cn/Record.List'
 
-        request = self.POST(url, payload)
-        response = {}
+        response = self.POST(url, payload)
+        respRet = {}
 
-        if request['status'] != 1:
-            raise PostError(request['content'])
+        if int(response['status']['code']) != 1:
+            raise APIError("Code: 2 " + response['status']['message'])
 
-        if int(request['content']['status']['code']) != 1:
-            raise APIError(request['content']['status']['message'])
-
-        for record in request['content']['records']:
+        for record in response['records']:
 
             if record['name'] == self._subdomain:
-                response['id'] = record['id']
-                response['value'] = record['value']
-                response['recordLineID'] = record['line_id']
-                return response
+                respRet['id'] = record['id']
+                respRet['value'] = record['value']
+                respRet['recordLineID'] = record['line_id']
+                return respRet
 
         raise APIError("Can't fetch the DNS record about the subdomain(%s)." % self._subdomain)
 
@@ -87,13 +81,10 @@ class DDNS(object):
         }
         url = 'https://dnsapi.cn/Record.Ddns'
 
-        request = self.POST(url, payload)
+        response = self.POST(url, payload)
 
-        if request['status'] != 1:
-            raise PostError(request['content'])
-
-        if int(request['content']['status']['code']) != 1:
-            raise APIError(request['content']['status']['message'])
+        if int(response['status']['code']) != 1:
+            raise APIError("Code: 3 " + response['status']['message'])
 
         return 1
 
@@ -110,26 +101,20 @@ class DDNS(object):
 
         response = self.POST(url, payload)
 
-        if response["status"] != 1:
-            raise PostError(response['content'])
+        if response['code'] != 1:
+            raise APIError("Code: 4 " + response['value'])
 
-        return response['content']['value']
+        return response['value']
 
     def POST(self, url, payload):
-        response = {}
 
         try:
             request = urllib2.Request(url=url, data=urllib.urlencode(payload))
-            request_data = urllib2.urlopen(request, timeout=3)
+            request_data = urllib2.urlopen(request, timeout=5)
         except Exception as err:
-            raise PostError("post : %s" % err)
-            response['status'] = 0
-            response['content'] = "Error: connect/post timeout. Please check the url (%s) which must correct." % err
+            raise PostError("Code 5 %s" % err)
         else:
-            response['status'] = 1
-            response['content'] = json.loads(request_data.read())
-
-        return response
+            return json.loads(request_data.read())
 
 class Log(object):
     def __init__(self):
