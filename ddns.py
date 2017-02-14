@@ -6,24 +6,18 @@ import os
 import json
 import urllib
 import urllib2
+import ConfigParser
 
 class DDNS(object):
 
     def __init__(self):
-        """Class initialization
+        conf = ConfigParser.ConfigParser()
+        conf.read('config.ini')
 
-        Eg. abc.google.com
-
-        Args:
-            _domain: google.com
-            _subdomain: abc
-            _token: DNSPOD token. You can fetch this token on the dnspod website(https://www.dnspod.cn/console/user/security).
-            _formate: the post format of dnspod. DON'T MODIFIED THE DEFAULT FORMAT.
-        """
-        self._domain = ''
-        self._subdomain = ''
-        self._token = ''
-        self._format = 'json'
+        self._domain    = conf.get('Basic', 'Domain')
+        self._subdomain = conf.get('Basic', 'SubDomain')
+        self._token     = conf.get('Basic', 'DnspodToken')
+        self._format    = 'json'
 
     def getDomainID(self):
 
@@ -41,9 +35,9 @@ class DDNS(object):
         for domain in response['domains']:
             if domain['name'] == self._domain:
                 return domain['id']
-         
+
         raise APIError("Cant't fetch the info about the domain (%s)." % self._domain)
-            
+
     def getRecordID(self, domainID):
 
         payload = {
