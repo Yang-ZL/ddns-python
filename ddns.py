@@ -12,7 +12,7 @@ class DDNS(object):
 
     def __init__(self):
         conf = ConfigParser.ConfigParser()
-        conf.read('config.ini')
+        conf.read(os.path.dirname(os.path.abspath(__file__)) + '/config.ini')
 
         self._domain    = conf.get('Basic', 'Domain')
         self._subdomain = conf.get('Basic', 'SubDomain')
@@ -158,8 +158,8 @@ class PostError(Error):
 
 if __name__ == '__main__':
     try:
-        dynamic = DDNS()
         logs = Log()
+        dynamic = DDNS()
 
         localTime = time.strftime("%a %b %d %H:%M:%S %Y", time.localtime())
         domainid = dynamic.getDomainID()
