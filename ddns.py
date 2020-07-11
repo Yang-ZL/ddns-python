@@ -6,6 +6,8 @@ import os
 import json
 import urllib
 import urllib2
+import requests
+import re
 import ConfigParser
 
 class DDNS(object):
@@ -90,15 +92,9 @@ class DDNS(object):
             return 1
 
     def getIP(self):
-        payload = {'type': 'ip'}
-        url ="https://api.hooowl.com/getIP.php"
 
-        response = self.POST(url, payload)
-
-        if response['code'] != 1:
-            raise APIError("Code: 4 " + response['value'])
-
-        return response['value']
+        html_text = requests.get("http://ipv4.icanhazip.com/").text
+        return html_text
 
     def POST(self, url, payload):
 
