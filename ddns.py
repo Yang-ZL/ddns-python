@@ -93,7 +93,7 @@ class DDNS(object):
 
     def getIP(self):
 
-        html_text = requests.get("http://ipv4.icanhazip.com/").text
+        html_text = requests.get("http://ipv4.icanhazip.com/").text.replace('\n', '');
         return html_text
 
     def POST(self, url, payload):
