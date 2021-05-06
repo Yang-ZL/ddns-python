@@ -93,8 +93,10 @@ class DDNS(object):
 
     def getIP(self):
 
-        html_text = requests.get("http://ipv4.icanhazip.com/").text.replace('\n', '');
-        return html_text
+        # html_text = requests.get("http://ipv4.icanhazip.com/").text.replace('\n', '');
+        html_text = requests.get("http://pv.sohu.com/cityjson").text
+        trueIp =re.search(r'(([01]{0,1}\d{0,1}\d|2[0-4]\d|25[0-5])\.){3}([01]{0,1}\d{0,1}\d|2[0-4]\d|25[0-5])',html_text)
+        return trueIp.group()
 
     def POST(self, url, payload):
 
