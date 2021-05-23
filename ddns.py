@@ -4,16 +4,16 @@ import time
 import sys
 import os
 import json
-import urllib
-import urllib2
+import urllib.request
+import urllib.parse
 import requests
 import re
-import ConfigParser
+import configparser
 
 class DDNS(object):
 
     def __init__(self):
-        conf = ConfigParser.ConfigParser()
+        conf = configparser.ConfigParser()
         conf.read(os.path.dirname(os.path.abspath(__file__)) + '/config.ini')
 
         self._domain    = conf.get('Basic', 'Domain')
@@ -93,16 +93,21 @@ class DDNS(object):
 
     def getIP(self):
 
-        # html_text = requests.get("http://ipv4.icanhazip.com/").text.replace('\n', '');
-        html_text = requests.get("http://pv.sohu.com/cityjson").text
-        trueIp =re.search(r'(([01]{0,1}\d{0,1}\d|2[0-4]\d|25[0-5])\.){3}([01]{0,1}\d{0,1}\d|2[0-4]\d|25[0-5])',html_text)
-        return trueIp.group()
+        html_text = requests.get("http://myip.ipip.net").text
+
+        # print(html_text)
+
+        trueIp =re.search(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b",html_text)
+
+        data = trueIp.group(0)
+
+        return data
 
     def POST(self, url, payload):
 
         try:
-            request = urllib2.Request(url=url, data=urllib.urlencode(payload))
-            request_data = urllib2.urlopen(request, timeout=5)
+            data=bytes(urllib.parse.urlencode(payload), encoding='utf8')
+            request_data = urllib.request.urlopen(url, data=data)
         except Exception as err:
             raise PostError("Code 5 %s" % err)
         else:
